@@ -6,11 +6,13 @@ import 'package:google_docs_clone/colors.dart';
 import 'package:google_docs_clone/repository/auth_repository.dart';
 import 'package:routemaster/routemaster.dart';
 
+import '../common/loader.dart';
+import '../models/document_model.dart';
 import '../repository/document_repository.dart';
 
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
-  
+  const HomeScreen({Key? key}) : super(key: key);
+
   void signOut(WidgetRef ref) {
     ref.read(authRepositoryProvider).signOut();
     ref.read(userProvider.notifier).update((state) => null);
@@ -39,14 +41,14 @@ class HomeScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context,WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: kWhiteColor,
         elevation: 0,
         actions: [
           IconButton(
-             onPressed: () => createDocument(context, ref),
+            onPressed: () => createDocument(context, ref),
             icon: const Icon(
               Icons.add,
               color: kBlackColor,
@@ -61,7 +63,46 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Center(child: Text(ref.watch(userProvider)!.email),),
+      body: FutureBuilder(
+        future: ref.watch(documentRepositoryProvider).getDocuments(
+              ref.watch(userProvider)!.token,
+            ),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Loader();
+          }
+
+          return Center(
+            child: Container(
+              width: 600,
+              margin: const EdgeInsets.only(top: 10),
+              child: ListView.builder(
+                itemCount: snapshot.data!.data.length,
+                itemBuilder: (context, index) {
+                  DocumentModel document = snapshot.data!.data[index];
+
+                  return InkWell(
+                    onTap: () => navigateToDocument(context, document.id),
+                    child: SizedBox(
+                      height: 50,
+                      child: Card(
+                        child: Center(
+                          child: Text(
+                            document.title,
+                            style: const TextStyle(
+                              fontSize: 17,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
