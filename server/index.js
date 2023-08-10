@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(authRouter);
 app.use(documentRouter);
 
-const DB = "mongodb+srv://antonw:Anton1234@cluster0.pufisax.mongodb.net/?retryWrites=true&w=majority";
+const DB = "";
 
 
 mongoose
